@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.1.2
+// @version         1.1.3
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持修改音质，链接导出、调用aria2等功能，直接下载M4A，MP3文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -406,7 +406,7 @@ color: #55ACEE;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.1.2",
+			version: "1.1.3",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -422,7 +422,7 @@ color: #55ACEE;
 				all_li.forEach((item) => {
 					const item_a = item.querySelector('a');
 					const number = item.querySelector('span.num') ? parseInt(item.querySelector('span.num').innerText) + global_setting.offset : 0
-					const title = item_a.title.replaceAll(/\./, '-')
+					const title = item_a.title.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '')
 					const music = {
 						id: item_a.href.split('/')[item_a.href.split('/').length - 1],
 						number,
@@ -476,7 +476,7 @@ color: #55ACEE;
 				var _this = this
 				const details = {
 					url: item.url || await this.getMusicURL(item),
-					name: item.title.replaceAll(/\./, '-'),
+					name: item.title.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, ''),
 					onload: function(e) {
 						_this.isDownloading = false
 						item.isDownloading = false
@@ -511,7 +511,7 @@ color: #55ACEE;
 				const _this = this
 				const details = {
 					url: item.url || await this.getMusicURL(item),
-					name: item.title.replaceAll(/\./, '-'),
+					name: item.title.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, ''),
 					onload: function(e) {
 						item.isDownloading = false
 						item.isDownloaded = true
@@ -588,8 +588,9 @@ color: #55ACEE;
 					wsurl: global_setting.aria2_wsurl,
 					token: global_setting.aria2_secret
 				}
-				var dir = document.querySelector('h1.title').innerText + '/'
-				dir = dir || Date.parse(new Date()) / 1000 + '/'
+				var dir = document.querySelector('h1.title').innerText
+				dir = dir || (Date.parse(new Date()) / 1000 + '')
+				dir = dir.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '') + '/'
 				for (var num = 0; num < this.musicList.length; num++) {
 					var item = this.musicList[num];
 					const url = await this.getMusicURL(item)
