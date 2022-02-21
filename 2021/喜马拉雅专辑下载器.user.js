@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.1.3
+// @version         1.1.4
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持修改音质，链接导出、调用aria2等功能，直接下载M4A，MP3文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -14,7 +14,7 @@
 // @require         https://cdn.jsdelivr.net/npm/vue@2
 // @require         https://cdn.jsdelivr.net/npm/sweetalert@2.1.2/dist/sweetalert.min.js
 // @require         https://cdn.bootcss.com/jquery/3.3.1/jquery.js
-// @require         https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1009847
+// @require https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1020803
 // @require         https://unpkg.com/ajax-hook@2.0.3/dist/ajaxhook.min.js
 // @supportURL      https://greasyfork.org/zh-CN/scripts/435495/feedback
 // @homepageURL     https://greasyfork.org/zh-CN/scripts/435495
@@ -406,7 +406,7 @@ color: #55ACEE;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.1.3",
+			version: "1.1.4",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
