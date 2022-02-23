@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.1.4
+// @version         1.1.5
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持修改音质，链接导出、调用aria2等功能，直接下载M4A，MP3文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -107,7 +107,7 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 <thead><tr><th><a @click='selectAllMusic'>全选</a></th><th>标题</th><th>操作</th></tr></thead>
 <tbody id="priate_script_table">
 <tr v-for="(item, index) in filterData" key="index">
-<td><input v-model="musicList" :value='item' type="checkbox" :disabled="item.isDownloaded || isDownloading"></td>
+<td><input class="checkMusicBox" v-model="musicList" :value='item' type="checkbox" :disabled="item.isDownloaded || isDownloading"></td>
 <td><a style='color:#337ab7'>{{item.title}}</a></td>
 <td>
 <a v-show="!item.isDownloading && !item.isDownloaded && !isDownloading" style='color:#993333' @click="downloadMusic(item)">下载</a>
@@ -233,6 +233,10 @@ color: #00947e;
 .swal-button--mid{
 background-color: #ECF6FD !important;
 color: #55ACEE;
+}
+.checkMusicBox{
+transform: scale(1.7,1.7);
+cursor: pointer;
 }
 `);
 		document.querySelector("html").appendChild(priate_script_div)
@@ -406,7 +410,7 @@ color: #55ACEE;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.1.4",
+			version: "1.1.5",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
