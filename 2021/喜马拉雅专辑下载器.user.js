@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.1.5
+// @version         1.1.6
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持修改音质，链接导出、调用aria2等功能，直接下载M4A，MP3文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -410,7 +410,7 @@ cursor: pointer;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.1.5",
+			version: "1.1.6",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -426,7 +426,7 @@ cursor: pointer;
 				all_li.forEach((item) => {
 					const item_a = item.querySelector('a');
 					const number = item.querySelector('span.num') ? parseInt(item.querySelector('span.num').innerText) + global_setting.offset : 0
-					const title = item_a.title.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '')
+					const title = item_a.title.trim().replace(/\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '').replace(/\./g, '-')
 					const music = {
 						id: item_a.href.split('/')[item_a.href.split('/').length - 1],
 						number,
@@ -440,7 +440,7 @@ cursor: pointer;
 				// 如果没有获取到数据,则判断为单个音频
 				if (result.length == 0 && location.pathname.split('/')[location.pathname.split('/').length - 1]) {
 					const music = {
-						id: location.pathname.split('/')[3],
+						id: location.pathname.split('/')[location.pathname.split('/').length - 1],
 						title: document.querySelector('h1.title-wrapper').innerText,
 						isDownloading: false,
 						isDownloaded: false,
@@ -480,7 +480,7 @@ cursor: pointer;
 				var _this = this
 				const details = {
 					url: item.url || await this.getMusicURL(item),
-					name: item.title.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, ''),
+					name: item.title.trim().replace(/\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '').replace(/\./g, '-'),
 					onload: function(e) {
 						_this.isDownloading = false
 						item.isDownloading = false
@@ -515,7 +515,7 @@ cursor: pointer;
 				const _this = this
 				const details = {
 					url: item.url || await this.getMusicURL(item),
-					name: item.title.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, ''),
+					name: item.title.trim().replace(/\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '').replace(/\./g, '-'),
 					onload: function(e) {
 						item.isDownloading = false
 						item.isDownloaded = true
@@ -594,7 +594,7 @@ cursor: pointer;
 				}
 				var dir = document.querySelector('h1.title').innerText
 				dir = dir || (Date.parse(new Date()) / 1000 + '')
-				dir = dir.trim().replace(/\.\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '') + '/'
+				dir = dir.trim().replace(/\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '').replace(/\./g, '-') + '/'
 				for (var num = 0; num < this.musicList.length; num++) {
 					var item = this.musicList[num];
 					const url = await this.getMusicURL(item)
