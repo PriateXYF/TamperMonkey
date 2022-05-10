@@ -34,7 +34,16 @@
 		aria2_secret: "", // aria2 rpc-secret 设置的值
 	}
 
-	//以下内容勿修改
+
+
+
+
+
+
+
+	// |------------------------------------------------------|
+    // |                   以下内容请勿修改                      |
+    // |------------------------------------------------------|
 	function initSetting() {
 		var setting;
 		if (!GM_getValue('priate_script_xmly_data')) {
