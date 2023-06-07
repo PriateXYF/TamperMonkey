@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.1
+// @version         1.2.2
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -57,6 +57,7 @@
 	// 手动获取音频地址功能
 	function manualGetMusicURL() {
 		let windowID = getRandStr("1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", 100)
+
 		function getRandStr(chs, len) {
 			let str = "";
 			while (len--) {
@@ -436,7 +437,7 @@ cursor: pointer;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.2.1",
+			version: "1.2.2",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -447,6 +448,18 @@ cursor: pointer;
 		},
 		methods: {
 			loadMusic() {
+				const whiteList = ['sound', 'album']
+				const type = location.pathname.split('/')[location.pathname.split('/').length - 2]
+				if (whiteList.indexOf(type) < 0) {
+					swal("请先进入一个专辑页面并等待页面完全加载！", {
+						icon: "error",
+						buttons: false,
+						timer: 3000,
+					});
+					this.data = []
+					this.musicList = []
+					return
+				}
 				const all_li = document.querySelectorAll('.sound-list>ul li');
 				var result = [];
 				var _this = this
@@ -465,7 +478,7 @@ cursor: pointer;
 					result.push(music)
 				})
 				// 如果没有获取到数据,则判断为单个音频
-				if (result.length == 0 && location.pathname.split('/')[location.pathname.split('/').length - 1]) {
+				if (result.length == 0 && type == 'sound') {
 					const music = {
 						id: location.pathname.split('/')[location.pathname.split('/').length - 1],
 						title: document.querySelector('h1.title-wrapper').innerText,
@@ -479,7 +492,7 @@ cursor: pointer;
 
 				// 如果仍未获取到数据
 				if (result.length == 0) {
-					swal("未获取到数据，请先选择一个专辑页面并等待页面完全加载！", {
+					swal("未获取到数据，请进入一个专辑页面并等待页面完全加载！", {
 						icon: "error",
 						buttons: false,
 						timer: 3000,
@@ -657,9 +670,9 @@ cursor: pointer;
 			async exportAllMusicURL() {
 				var _this = this
 				var swalField = document.createElement('input');
-            	swalField.setAttribute("placeholder", "Aria2 下载地址");
-            	swalField.setAttribute("value", this.setting.aria2);
-            	swalField.setAttribute("class", "swal-content__input");
+				swalField.setAttribute("placeholder", "Aria2 下载地址");
+				swalField.setAttribute("value", this.setting.aria2);
+				swalField.setAttribute("class", "swal-content__input");
 				swal("URL : 仅复制选中音频的 URL，不附带文件名等信息。\n\nCSV : 下载包含专辑名、音频名、URL等信息的 CSV 文件，可用 EXCEL 编辑，便于自己实现批量下载。\n\nAria2 : 调用 Aria2 进行下载，请先在文本框中填写 RPC 地址，并在 RPC 服务端将授权密钥设置为空，默认为 Motrix 的 RPC 下载地址。", {
 					buttons: {
 						1: "URL",
@@ -680,7 +693,7 @@ cursor: pointer;
 							await _this.aria2AllMusicURL(swalField.value);
 							break;
 						default:
-							if(value) swal(`导出失败！导出方法 ${value} 不存在。`, {
+							if (value) swal(`导出失败！导出方法 ${value} 不存在。`, {
 								icon: "error",
 								buttons: false,
 								timer: 3000,
@@ -752,7 +765,7 @@ cursor: pointer;
 			// 增加编号偏移量
 			addNumberOffset() {
 				var setting = GM_getValue('priate_script_xmly_data')
-				if (!setting.showNumber) swal("请先开启编号功能再设置编号偏移量！",{
+				if (!setting.showNumber) swal("请先开启编号功能再设置编号偏移量！", {
 					buttons: false,
 					timer: 2000,
 				})
@@ -778,14 +791,13 @@ cursor: pointer;
 					}
 				}).then((value) => {
 					const number = parseInt(value)
-					if(number > 100 || number < 30){
+					if (number > 100 || number < 30) {
 						swal(`每页数量不得超过 100 或少于 30！`, {
 							icon: "error",
 							buttons: false,
 							timer: 4000,
 						});
-					}
-					else{
+					} else {
 						_this.setting.pageSize = number || _this.setting.pageSize
 						GM_setValue('priate_script_xmly_data', _this.setting)
 						if (value) location.reload()
