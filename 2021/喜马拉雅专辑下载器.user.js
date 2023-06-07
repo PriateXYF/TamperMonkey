@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.0
-// @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持修改音质，链接导出、调用aria2等功能，直接下载M4A，MP3文件。
+// @version         1.2.1
+// @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
 // @grant           GM_xmlhttpRequest
@@ -14,7 +14,7 @@
 // @require         https://unpkg.com/vue@2
 // @require         https://unpkg.com/sweetalert@2.1.2/dist/sweetalert.min.js
 // @require         https://unpkg.com/jquery@3.2.1/dist/jquery.min.js
-// @require         https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1021495
+// @require https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1201318
 // @require         https://unpkg.com/ajax-hook@2.0.3/dist/ajaxhook.min.js
 // @supportURL      https://greasyfork.org/zh-CN/scripts/435495/feedback
 // @homepageURL     https://greasyfork.org/zh-CN/scripts/435495
@@ -25,25 +25,7 @@
 
 (function() {
 	'use strict';
-	// 用户自定义设置
-	const global_setting = {
-		number: false, // 是否在标题前添加编号 true-开启 false-关闭
-		offset: 0, // 标题编号的偏移量(在原有的基础上进行加减，如1则为在原有编号的基础上加1，-3则为在原有编号的基础上减3)
-		export: 'url', // 点击“导出数据”按钮时的功能 url-粘贴原始url到剪切板 csv-以csv格式粘贴到剪切板 aria2-调用aria2jsonrpc下载
-		aria2_wsurl: "ws://127.0.0.1:6800/jsonrpc", // aria2 JSON rpc地址
-		aria2_secret: "", // aria2 rpc-secret 设置的值
-	}
 
-
-
-
-
-
-
-
-	// |------------------------------------------------------|
-    // |                   以下内容请勿修改                      |
-    // |------------------------------------------------------|
 	function initSetting() {
 		var setting;
 		if (!GM_getValue('priate_script_xmly_data')) {
@@ -53,19 +35,28 @@
 				left: 20,
 				top: 100,
 				manualMusicURL: null,
-				quality: 1
+				quality: 1,
+				showNumber: true,
+				numberOffset: 0,
+				pageSize: 30,
+				aria2: "ws://127.0.0.1:16800/jsonrpc"
 			})
 		}
 		setting = GM_getValue('priate_script_xmly_data')
 		//后期添加内容
-		if (setting.quality !== 0) setting.quality = setting.quality || 1;
+		if (!setting.quality) setting.quality = 1;
+		// 暂时统一为高清音质
+		setting.quality = 1
+		if (!setting.showNumber) setting.showNumber = true;
+		if (!setting.numberOffset) setting.numberOffset = 0;
+		if (!setting.pageSize) setting.pageSize = 30;
+		if (!setting.aria2) setting.aria2 = "ws://127.0.0.1:16800/jsonrpc"
 		GM_setValue('priate_script_xmly_data', setting)
 	}
 
 	// 手动获取音频地址功能
 	function manualGetMusicURL() {
 		let windowID = getRandStr("1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM", 100)
-
 		function getRandStr(chs, len) {
 			let str = "";
 			while (len--) {
@@ -103,9 +94,14 @@
 <div id="priate_script_div">
 <div>
 <b style='font-size:30px; margin: 0 0'>喜马拉雅下载器</b>
-<p style='margin: 0 0'>by <a @click='openDonate' style='color:#337ab7'>Priate</a> |
+<p id='priate_script_setting' style='margin: 0 0'>
+by <a @click='openDonate' style='color:#337ab7'>Priate</a> |
 v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#CC0F35'>{{version}}</a> |
 音质 : <a @click='changeQuality' :style='"color:" + qualityColor'>{{qualityStr}}</a>
+<br>
+编号 : <a @click='switchShowNumber' :style='"color:" + (setting.showNumber ? "#00947e" : "#CC0F35")'> {{ setting.showNumber ? "开启" : "关闭"}} </a> -
+<a @click='addNumberOffset' :style='"color:" + (setting.showNumber ? "#3311AA" : "#CC0F35")'> {{ setting.numberOffset }} </a> |
+数量 : <a @click='changePageSize' style='color:#3311AA'> {{ setting.pageSize }} </a>
 </p>
 <button v-show="!isDownloading" @click="loadMusic">{{filterData.length > 0 ? '重载数据' : '加载数据'}}</button>
 <button id='readme' @click="downloadAllMusics" v-show="!isDownloading && (musicList.length > 0)">下载所选</button>
@@ -222,6 +218,13 @@ border-radius: 100%;
 #priate_script_div .hide-button:hover{
 background-color : rgba(240, 223, 175, 0.9);
 }
+/*设置区域 p 标签*/
+#priate_script_setting{
+user-select : none;
+-webkit-user-select : none;
+-moz-user-select : none;
+-ms-user-select:none;
+}
 /*输入框样式*/
 #priate_script_div textarea{
 height : 50px;
@@ -231,15 +234,15 @@ border:1px solid #000000;
 padding: 4px;
 }
 /*swal按钮*/
-.swal-button--low{
+.swal-button--1{
 background-color: #FFFAEB !important;
 color: #946C00;
 }
-.swal-button--high{
+.swal-button--2{
 background-color: #ebfffc !important;
 color: #00947e;
 }
-.swal-button--mid{
+.swal-button--3{
 background-color: #ECF6FD !important;
 color: #55ACEE;
 }
@@ -319,13 +322,27 @@ cursor: pointer;
 		})
 		unsafeWindow.XMLHttpRequest = XMLHttpRequest
 	}
-
+	// 修改翻页大小
+	function initPageSize() {
+		const originFetch = fetch;
+		const setting = GM_getValue('priate_script_xmly_data')
+		window.unsafeWindow.fetch = (url, options) => {
+			if (url.indexOf('/revision/album/v1/getTracksList') != -1) {
+				url = url.replace('pageSize=30', `pageSize=${setting.pageSize}`)
+			}
+			return originFetch(url, options).then(async (response) => {
+				return response;
+			});
+		};
+	}
 	//初始化脚本设置
 	initSetting()
 	//注入脚本div
 	injectDiv()
 	// 初始化音质修改
 	initQuality()
+	// 修改翻页大小
+	initPageSize()
 
 	// 第一种获取musicURL的方式，任意用户均可获得，不可获得VIP音频
 	async function getSimpleMusicURL1(item) {
@@ -419,27 +436,28 @@ cursor: pointer;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.2.0",
+			version: "1.2.1",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
 			musicList: [],
 			isDownloading: false,
 			cancelDownloadObj: null,
-			stopDownload: false
+			stopDownload: false,
 		},
 		methods: {
 			loadMusic() {
 				const all_li = document.querySelectorAll('.sound-list>ul li');
 				var result = [];
+				var _this = this
 				all_li.forEach((item) => {
 					const item_a = item.querySelector('a');
-					const number = item.querySelector('span.num') ? parseInt(item.querySelector('span.num').innerText) + global_setting.offset : 0
+					const number = item.querySelector('span.num') ? parseInt(item.querySelector('span.num').innerText) + _this.setting.numberOffset - 1 : 0
 					const title = item_a.title.trim().replace(/\\|\/|\?|\？|\*|\"|\“|\”|\'|\‘|\’|\<|\>|\{|\}|\[|\]|\【|\】|\：|\:|\、|\^|\$|\!|\~|\`|\|/g, '').replace(/\./g, '-')
 					const music = {
 						id: item_a.href.split('/')[item_a.href.split('/').length - 1],
 						number,
-						title: global_setting.number ? `${number}-${title}` : title,
+						title: _this.setting.showNumber ? `${number}-${title}` : title,
 						isDownloading: false,
 						isDownloaded: false,
 						progress: 0,
@@ -588,18 +606,31 @@ cursor: pointer;
 					res.push(`${url},${dir},${item.title}`)
 				}
 				GM_setClipboard(res.join('\n'))
-				swal("复制csv成功!", {
+				this.copyMusicURLProgress = 0
+
+				function download(filename, text) {
+					var element = document.createElement('a');
+					element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+					element.setAttribute('download', filename);
+					element.style.display = 'none';
+					document.body.appendChild(element);
+					element.click();
+					document.body.removeChild(element);
+				}
+
+				download(`${dir}.csv`, res.join('\n'));
+				swal("下载 CSV 文件成功!", {
 					icon: "success",
 					buttons: false,
 					timer: 1000,
 				});
-				this.copyMusicURLProgress = 0
 			},
-			async aria2AllMusicURL() {
+			async aria2AllMusicURL(wsurl) {
+				this.setting.aria2 = wsurl
+				GM_setValue('priate_script_xmly_data', this.setting)
 				this.copyMusicURLProgress = 0
 				const config = {
-					wsurl: global_setting.aria2_wsurl,
-					token: global_setting.aria2_secret
+					wsurl
 				}
 				var dir = document.querySelector('h1.title').innerText
 				dir = dir || (Date.parse(new Date()) / 1000 + '')
@@ -616,31 +647,47 @@ cursor: pointer;
 					this.copyMusicURLProgress = Math.round((num + 1) / this.musicList.length * 10000) / 100.00;
 					Aria2(url, dir + item.title + '.' + ext, config)
 				}
-				swal("导出到aria2成功!文件已保存至 " + dir, {
+				swal(`Aria2 任务下发成功！文件保存至 ${dir} ，请自行检查下载状态。`, {
 					icon: "success",
 					buttons: false,
-					timer: 4000,
+					timer: 5000,
 				});
 				this.copyMusicURLProgress = 0
 			},
 			async exportAllMusicURL() {
-				switch (global_setting.export) {
-					case 'url':
-						await this.copyAllMusicURL();
-						break;
-					case "aria2":
-						await this.aria2AllMusicURL();
-						break;
-					case "csv":
-						await this.csvAllMusicURL();
-					default:
-						swal("用户自定义参数 export 设置错误，可选参数：[url, aria2, csv]", {
-							icon: "error",
-							buttons: false,
-							timer: 3000,
-						});
-						break;
-				}
+				var _this = this
+				var swalField = document.createElement('input');
+            	swalField.setAttribute("placeholder", "Aria2 下载地址");
+            	swalField.setAttribute("value", this.setting.aria2);
+            	swalField.setAttribute("class", "swal-content__input");
+				swal("URL : 仅复制选中音频的 URL，不附带文件名等信息。\n\nCSV : 下载包含专辑名、音频名、URL等信息的 CSV 文件，可用 EXCEL 编辑，便于自己实现批量下载。\n\nAria2 : 调用 Aria2 进行下载，请先在文本框中填写 RPC 地址，并在 RPC 服务端将授权密钥设置为空，默认为 Motrix 的 RPC 下载地址。", {
+					buttons: {
+						1: "URL",
+						2: "CSV",
+						3: "Aria2",
+					},
+					content: swalField,
+				}).then(async (value) => {
+					const method = parseInt(value)
+					switch (method) {
+						case 1:
+							await _this.copyAllMusicURL();
+							break;
+						case 2:
+							await _this.csvAllMusicURL();
+							break;
+						case 3:
+							await _this.aria2AllMusicURL(swalField.value);
+							break;
+						default:
+							if(value) swal(`导出失败！导出方法 ${value} 不存在。`, {
+								icon: "error",
+								buttons: false,
+								timer: 3000,
+							});
+							break;
+					}
+				})
 			},
 			selectAllMusic() {
 				if (this.musicList.length == this.notDownloadedData.length) {
@@ -661,33 +708,91 @@ cursor: pointer;
 			// 修改音质功能
 			changeQuality() {
 				const _this = this
-				swal("请选择需要设置的音质，注意：此功能处于测试中，超高音质仅登陆后VIP可用，且部分音频不存在超高音质。(切换后将刷新页面)", {
-					buttons: {
-						low: "标准",
-						mid: "高清",
-						high: "超高(仅VIP)",
-					},
+				swal("由于喜马拉雅接口变动，此功能暂时不可用，目前统一为高清。", {
+					buttons: false,
+					timer: 3000,
+					// buttons: {
+					// 	1: "标准",
+					// 	2: "高清",
+					// 	3: "超高(仅VIP)",
+					// },
 				}).then((value) => {
 					var setting = GM_getValue('priate_script_xmly_data')
 					var changeFlag = true
 					switch (value) {
-						case "low":
+						case "1":
 							setting.quality = 0;
 							break;
-						case "mid":
+						case "2":
 							setting.quality = 1;
 							break;
-						case "high":
+						case "3":
 							setting.quality = 2;
 							break;
 						default:
 							changeFlag = false
 					}
+					setting.quality = 1
 					GM_setValue('priate_script_xmly_data', setting)
 					_this.setting = setting
 					changeFlag && location.reload()
 				});
 			},
+			// 切换是否显示编号功能
+			switchShowNumber() {
+				var setting = GM_getValue('priate_script_xmly_data')
+				setting.showNumber = !setting.showNumber
+				setting.numberOffset = 0
+				GM_setValue('priate_script_xmly_data', setting)
+				this.setting = setting
+				if (this.filterData.length > 0) {
+					this.loadMusic()
+				}
+			},
+			// 增加编号偏移量
+			addNumberOffset() {
+				var setting = GM_getValue('priate_script_xmly_data')
+				if (!setting.showNumber) swal("请先开启编号功能再设置编号偏移量！",{
+					buttons: false,
+					timer: 2000,
+				})
+				if (setting.showNumber) setting.numberOffset += 1
+
+				GM_setValue('priate_script_xmly_data', setting)
+				this.setting = setting
+				if (this.filterData.length > 0) {
+					this.loadMusic()
+				}
+			},
+			// 修改每页容量
+			changePageSize() {
+				const _this = this
+				swal("请设置每页展示的音频数量，最小为 30 ，最大为 100。\n\n注意：此设置仅会改变每页展示数据，底部的分页导航不受影响，因此后面部分页面出现空白为正常现象。\n\n设置后将刷新页面。", {
+					content: {
+						element: "input",
+						attributes: {
+							placeholder: "每页展示的音频数量",
+							type: "number",
+							value: _this.setting.pageSize ? _this.setting.pageSize : 30
+						}
+					}
+				}).then((value) => {
+					const number = parseInt(value)
+					if(number > 100 || number < 30){
+						swal(`每页数量不得超过 100 或少于 30！`, {
+							icon: "error",
+							buttons: false,
+							timer: 4000,
+						});
+					}
+					else{
+						_this.setting.pageSize = number || _this.setting.pageSize
+						GM_setValue('priate_script_xmly_data', _this.setting)
+						if (value) location.reload()
+					}
+				});
+			},
+
 			openDonate() {
 				showDonate()
 			}
