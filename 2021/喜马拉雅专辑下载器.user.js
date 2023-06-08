@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.4
+// @version         1.2.5
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -115,7 +115,7 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 <tbody id="priate_script_table">
 <tr v-for="(item, index) in filterData" :key="index">
 <td><input class="checkMusicBox" v-model="musicList" :value='item' type="checkbox" :disabled="item.isDownloaded || isDownloading"></td>
-<td><a style='color:#337ab7'>{{item.title}}</a></td>
+<td><a @click="openMusicURL(item)" style='color:#337ab7'>{{item.title}}</a></td>
 <td>
 <a v-show="!item.isDownloading && !item.isDownloaded && !isDownloading" style='color:#993333' @click="downloadMusic(item)">下载</a>
 <a v-show="isDownloading && !item.isDownloading && !item.isDownloaded" style='color:gray'>等待中</a>
@@ -472,7 +472,7 @@ cursor: pointer;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.2.4",
+			version: "1.2.5",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -547,6 +547,10 @@ cursor: pointer;
 				res = res || await getAllMusicURL1(item)
 				this.$set(item, 'url', res)
 				return res
+			},
+			async openMusicURL(item) {
+				item.url = item.url || await this.getMusicURL(item)
+				window.open(item.url)
 			},
 			async downloadMusic(item) {
 				//this.isDownloading = true
