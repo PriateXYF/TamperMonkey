@@ -94,7 +94,6 @@
 		var priate_script_div = document.createElement("div")
 		priate_script_div.innerHTML = `
 <div id="priate_script_div">
-<div>
 <b style='font-size:30px; font-weight:300; margin: 10px 20px'>喜马拉雅专辑下载器</b>
 <p id='priate_script_setting' style='margin: 0 0'>
 ❤️ by <a @click='openDonate' style='color:#337ab7'>Priate</a> |
@@ -112,7 +111,7 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 <button @click="cancelDownload" v-show="isDownloading">取消下载</button>
 </br>
 <table v-show="filterData.length > 0">
-<thead><tr><th><a style='color:#660000' @click='selectAllMusic'>全选</a></th><th>标题</th><th>操作</th></tr></thead>
+<thead><tr><th><a style='color:#337ab7' @click='selectAllMusic'>全选</a></th><th>标题</th><th>操作</th></tr></thead>
 <tbody id="priate_script_table">
 <tr v-for="(item, index) in filterData" :key="index">
 <td><input class="checkMusicBox" v-model="musicList" :value='item' type="checkbox" :disabled="item.isDownloaded || isDownloading"></td>
@@ -127,7 +126,6 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 </tr>
 </tbody>
 </table>
-</div>
 </div>
 `
 		GM_addStyle(`
@@ -165,17 +163,14 @@ text-decoration : none;
 /*表格样式*/
 #priate_script_div table{
 text-align: center;
-border:2px solid #660000;
+// border:2px solid #660000;
 margin: 5px auto;
 padding: 2px;
 border-collapse: collapse;
-
 display: block;
 height : 400px;
 overflow-y: scroll;
 }
-
-
 /*表格框样式*/
 #priate_script_div td{
 border:2px solid #660000;
@@ -187,6 +182,9 @@ word-wrap : break-word;
 #priate_script_div th{
 border:2px solid #660000;
 padding: 8px 12px;
+font-weight: 300;
+-webkit-text-stroke: 0.5px;
+text-stroke: 0.5px;
 }
 
 /*脚本按钮样式*/
