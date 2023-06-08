@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.3
+// @version         1.2.4
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -14,8 +14,9 @@
 // @require         https://unpkg.com/vue@2
 // @require         https://unpkg.com/sweetalert@2.1.2/dist/sweetalert.min.js
 // @require         https://unpkg.com/jquery@3.2.1/dist/jquery.min.js
-// @require https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1201384
+// @require         https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1201384
 // @require         https://unpkg.com/ajax-hook@2.0.3/dist/ajaxhook.min.js
+// @require         https://unpkg.com/crypto-js@4.1.1/crypto-js.js
 // @supportURL      https://greasyfork.org/zh-CN/scripts/435495/feedback
 // @homepageURL     https://greasyfork.org/zh-CN/scripts/435495
 // @contributionURL https://afdian.net/@cyberubbish
@@ -433,11 +434,45 @@ cursor: pointer;
 		}
 		return res
 	}
+	// 通过解密数据的方式获取 URL
+	async function getAllMusicURL2(item) {
+		function decrypt(t) {
+			return CryptoJS.AES.decrypt({
+				ciphertext: CryptoJS.enc.Base64url.parse(t)
+			}, CryptoJS.enc.Hex.parse('aaad3e4fd540b0f79dca95606e72bf93'), {
+				mode: CryptoJS.mode.ECB,
+				padding: CryptoJS.pad.Pkcs7
+			}).toString(CryptoJS.enc.Utf8)
+		}
+		var res = null
+		if (item.url) {
+			res = item.url
+		} else {
+			const timestamp = Date.parse(new Date());
+			var url = `https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/${timestamp}?device=web&trackId=${item.id}`
+			$.ajax({
+				type: 'get',
+				url: url,
+				async: false,
+				dataType: "json",
+				success: function(resp) {
+					try {
+						res = decrypt(resp.trackInfo.playUrlList[0].url)
+					} catch (e) {
+						console.log("解密错误")
+						res = null
+					}
+				}
+			});
+		}
+		return res
+	}
+
 	// 处理数据等逻辑
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.2.3",
+			version: "1.2.4",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -504,11 +539,11 @@ cursor: pointer;
 				this.data.forEach((item) => {
 					this.musicList.push(item)
 				})
-
 			},
 			async getMusicURL(item) {
 				var res = await getSimpleMusicURL1(item)
 				res = res || await getSimpleMusicURL2(item)
+				res = res || await getAllMusicURL2(item)
 				res = res || await getAllMusicURL1(item)
 				this.$set(item, 'url', res)
 				return res
