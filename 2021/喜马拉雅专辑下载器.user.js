@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.5
+// @version         1.2.6
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -95,15 +95,16 @@
 		priate_script_div.innerHTML = `
 <div id="priate_script_div">
 <div>
-<b style='font-size:30px; margin: 0 0'>喜马拉雅下载器</b>
+<b style='font-size:30px; font-weight:300; margin: 10px 20px'>喜马拉雅专辑下载器</b>
 <p id='priate_script_setting' style='margin: 0 0'>
-by <a @click='openDonate' style='color:#337ab7'>Priate</a> |
-v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#CC0F35'>{{version}}</a> |
+❤️ by <a @click='openDonate' style='color:#337ab7'>Priate</a> |
+v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#ff6666'>{{version}}</a> |
 音质 : <a @click='changeQuality' :style='"color:" + qualityColor'>{{qualityStr}}</a>
 <br>
 编号 : <a @click='switchShowNumber' :style='"color:" + (setting.showNumber ? "#00947e" : "#CC0F35")'> {{ setting.showNumber ? "开启" : "关闭"}} </a> -
 <a @click='addNumberOffset' :style='"color:" + (setting.showNumber ? "#3311AA" : "#CC0F35")'> {{ setting.numberOffset }} </a> |
-数量 : <a @click='changePageSize' style='color:#3311AA'> {{ setting.pageSize }} </a>
+数量 : <a @click='changePageSize' style='color:#3311AA'> {{ setting.pageSize }} </a> |
+<a style='color:#ff6666' @click='clearMusicData'>❌</a>
 </p>
 <button v-show="!isDownloading" @click="loadMusic">{{filterData.length > 0 ? '重载数据' : '加载数据'}}</button>
 <button id='readme' @click="downloadAllMusics" v-show="!isDownloading && (musicList.length > 0)">下载所选</button>
@@ -111,7 +112,7 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 <button @click="cancelDownload" v-show="isDownloading">取消下载</button>
 </br>
 <table v-show="filterData.length > 0">
-<thead><tr><th><a @click='selectAllMusic'>全选</a></th><th>标题</th><th>操作</th></tr></thead>
+<thead><tr><th><a style='color:#660000' @click='selectAllMusic'>全选</a></th><th>标题</th><th>操作</th></tr></thead>
 <tbody id="priate_script_table">
 <tr v-for="(item, index) in filterData" :key="index">
 <td><input class="checkMusicBox" v-model="musicList" :value='item' type="checkbox" :disabled="item.isDownloaded || isDownloading"></td>
@@ -120,7 +121,7 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 <a v-show="!item.isDownloading && !item.isDownloaded && !isDownloading" style='color:#993333' @click="downloadMusic(item)">下载</a>
 <a v-show="isDownloading && !item.isDownloading && !item.isDownloaded" style='color:gray'>等待中</a>
 <a v-show="item.isDownloading" style='color:#C01D07'>{{item.progress}}</a>
-<a v-show="item.isDownloaded" style='color:#00947E'>已完成</a>
+<a v-show="item.isDownloaded" style='color:#00947E'>已下载</a>
 <a v-show="item.isFailued" style='color:red'>下载失败</a> |
 <a :style="'color:' + (item.url ? '#00947E' : '#993333')" @click="copyMusic(item)">地址</a></td>
 </tr>
@@ -133,16 +134,24 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 #priate_script_div{
 font-size : 15px;
 position: fixed;
-background-color: rgba(240, 223, 175, 0.9);
+background-color: rgb(240, 223, 175);
 color : #660000;
 text-align : center;
 padding: 10px;
 z-index : 9999;
 border-radius : 20px;
-border:2px solid black;
+border:2px solid #660000;
+font-weight: 300;
+-webkit-text-stroke: 0.5px;
+text-stroke: 0.5px;
+box-shadow: 5px 15px 15px rgba(0,0,0,0.4);
+user-select : none;
+-webkit-user-select : none;
+-moz-user-select : none;
+-ms-user-select:none;
 }
 #priate_script_div:hover{
-box-shadow: 5px 5px 5px #000000;
+box-shadow: 5px 15px 15px rgba(0,0,0,0.8);
 transition: box-shadow 0.3s;
 }
 .priate_script_hide{
@@ -190,35 +199,16 @@ color: #660000;
 text-decoration: none;
 padding: 5px 10px;
 margin : 5px 10px;
+font-weight: 300;
+-webkit-text-stroke: 0.5px;
+text-stroke: 0.5px;
 }
 /*脚本按钮悬浮样式*/
 #priate_script_div button:hover{
 cursor : pointer;
 color: rgb(240, 223, 175);
 background-color: #660000;
-}
-/*右下角显示按钮*/
-#priate_script_div .hide-button{
-z-index: 2147483647;
-width: 32px;
-height: 32px;
-cursor: pointer;
-position: fixed;
-left: 0px;
-bottom: 0px;
-color: #660000;
-text-align: center;
-line-height: 32px;
-margin: 10px;
-border-width: 1px;
-border-style: solid;
-border-color: #660000;
-border-image: initial;
-border-radius: 100%;
-}
-/*右下角显示按钮悬浮样式*/
-#priate_script_div .hide-button:hover{
-background-color : rgba(240, 223, 175, 0.9);
+transition: background-color 0.2s;
 }
 /*设置区域 p 标签*/
 #priate_script_setting{
@@ -472,7 +462,7 @@ cursor: pointer;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.2.5",
+			version: "1.2.6",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -616,11 +606,6 @@ cursor: pointer;
 			async copyMusic(item) {
 				item.url = item.url || await this.getMusicURL(item)
 				GM_setClipboard(item.url)
-				swal("复制成功!", {
-					icon: "success",
-					buttons: false,
-					timer: 1000,
-				});
 			},
 			// 下载当前列表全部音频
 			async downloadAllMusics() {
@@ -843,7 +828,14 @@ cursor: pointer;
 					}
 				});
 			},
-
+			clearMusicData() {
+				if (this.data.length == 0) swal(`已经是最简形态了！`, {
+					buttons: false,
+					timer: 2000,
+				});
+				this.data = []
+				this.musicList = []
+			},
 			openDonate() {
 				showDonate()
 			}
