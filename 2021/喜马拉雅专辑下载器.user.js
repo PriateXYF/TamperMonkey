@@ -14,7 +14,7 @@
 // @require         https://unpkg.com/vue@2
 // @require         https://unpkg.com/sweetalert@2.1.2/dist/sweetalert.min.js
 // @require         https://unpkg.com/jquery@3.2.1/dist/jquery.min.js
-// @require         https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1202055
+// @require         https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1202493
 // @require         https://unpkg.com/ajax-hook@2.0.3/dist/ajaxhook.min.js
 // @require         https://unpkg.com/crypto-js@4.1.1/crypto-js.js
 // @supportURL      https://greasyfork.org/zh-CN/scripts/435495/feedback
