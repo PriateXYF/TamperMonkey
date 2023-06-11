@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.7
+// @version         1.2.8
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -460,7 +460,7 @@ cursor: pointer;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.2.7",
+			version: "1.2.8",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -752,64 +752,56 @@ cursor: pointer;
 					// 	3: "超高(仅VIP)",
 					// },
 				}).then((value) => {
-					var setting = GM_getValue('priate_script_xmly_data')
 					var changeFlag = true
 					switch (value) {
 						case "1":
-							setting.quality = 0;
+							_this.setting.quality = 0;
 							break;
 						case "2":
-							setting.quality = 1;
+							_this.setting.quality = 1;
 							break;
 						case "3":
-							setting.quality = 2;
+							_this.setting.quality = 2;
 							break;
 						default:
 							changeFlag = false
 					}
-					setting.quality = 1
-					GM_setValue('priate_script_xmly_data', setting)
-					_this.setting = setting
+					_this.setting.quality = 1
+					GM_setValue('priate_script_xmly_data', _this.setting)
 					changeFlag && location.reload()
 				});
 			},
 			// 切换是否显示编号功能
 			switchShowNumber() {
-				var setting = GM_getValue('priate_script_xmly_data')
-				setting.showNumber = !setting.showNumber
-				setting.numberOffset = 0
-				GM_setValue('priate_script_xmly_data', setting)
-				this.setting = setting
+				this.setting.showNumber = !this.setting.showNumber
+				this.setting.numberOffset = 0
+				GM_setValue('priate_script_xmly_data', this.setting)
 				if (this.filterData.length > 0) {
 					this.loadMusic()
 				}
 			},
 			// 增加编号偏移量
 			addNumberOffset() {
-				var setting = GM_getValue('priate_script_xmly_data')
-				if (!setting.showNumber) swal("请先开启编号功能再设置编号偏移量！", {
+				if (!this.setting.showNumber) swal("请先开启编号功能再设置编号偏移量！", {
 					buttons: false,
 					timer: 2000,
 				})
-				if (setting.showNumber) setting.numberOffset += 1
+				if (this.setting.showNumber) this.setting.numberOffset += 1
 
-				GM_setValue('priate_script_xmly_data', setting)
-				this.setting = setting
+				GM_setValue('priate_script_xmly_data', this.setting)
 				if (this.filterData.length > 0) {
 					this.loadMusic()
 				}
 			},
 			// 减少编号偏移量
 			subNumberOffset() {
-				var setting = GM_getValue('priate_script_xmly_data')
-				if (!setting.showNumber) swal("请先开启编号功能再设置编号偏移量！", {
+				if (!this.setting.showNumber) swal("请先开启编号功能再设置编号偏移量！", {
 					buttons: false,
 					timer: 2000,
 				})
-				if (setting.showNumber) setting.numberOffset -= 1
+				if (this.setting.showNumber) this.setting.numberOffset -= 1
 
-				GM_setValue('priate_script_xmly_data', setting)
-				this.setting = setting
+				GM_setValue('priate_script_xmly_data', this.setting)
 				if (this.filterData.length > 0) {
 					this.loadMusic()
 				}
