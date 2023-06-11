@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.6
+// @version         1.2.7
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -101,7 +101,7 @@ v <a href="//greasyfork.org/zh-CN/scripts/435495" target="_blank" style='color:#
 音质 : <a @click='changeQuality' :style='"color:" + qualityColor'>{{qualityStr}}</a>
 <br>
 编号 : <a @click='switchShowNumber' :style='"color:" + (setting.showNumber ? "#00947e" : "#CC0F35")'> {{ setting.showNumber ? "开启" : "关闭"}} </a> -
-<a @click='addNumberOffset' :style='"color:" + (setting.showNumber ? "#3311AA" : "#CC0F35")'> {{ setting.numberOffset }} </a> |
+<a @click='addNumberOffset' @contextmenu.prevent='subNumberOffset' :style='"color:" + (setting.showNumber ? "#3311AA" : "#CC0F35")'> {{ setting.numberOffset }} </a> |
 数量 : <a @click='changePageSize' style='color:#3311AA'> {{ setting.pageSize }} </a> |
 <a style='color:#ff6666' @click='clearMusicData'>❌</a>
 </p>
@@ -460,7 +460,7 @@ cursor: pointer;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.2.6",
+			version: "1.2.7",
 			copyMusicURLProgress: 0,
 			setting: GM_getValue('priate_script_xmly_data'),
 			data: [],
@@ -792,6 +792,21 @@ cursor: pointer;
 					timer: 2000,
 				})
 				if (setting.showNumber) setting.numberOffset += 1
+
+				GM_setValue('priate_script_xmly_data', setting)
+				this.setting = setting
+				if (this.filterData.length > 0) {
+					this.loadMusic()
+				}
+			},
+			// 减少编号偏移量
+			subNumberOffset() {
+				var setting = GM_getValue('priate_script_xmly_data')
+				if (!setting.showNumber) swal("请先开启编号功能再设置编号偏移量！", {
+					buttons: false,
+					timer: 2000,
+				})
+				if (setting.showNumber) setting.numberOffset -= 1
 
 				GM_setValue('priate_script_xmly_data', setting)
 				this.setting = setting
