@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name            百度网盘 - 更高级的重命名
-// @version         1.0.1
-// @description     你不知道的百度网盘重命名姿势～支持批量替换重命名、手动批量修改后一次提交，拒绝转圈圈！
+// @version         1.0.2
+// @description     你不知道的百度网盘重命名姿势～支持批量替换重命名、手动批量修改后一次提交、智能重命名，拒绝转圈圈！
 // @author          Priate
 // @match           https://pan.baidu.com/*
 // @grant           GM_setValue
 // @grant           GM_getValue
 // @grant           GM_addStyle
-// @icon            https://www.ximalaya.com/favicon.ico
+// @icon            https://nd-static.bdstatic.com/m-static/v20-main/favicon-main.ico
 // @require         https://unpkg.com/vue@2
 // @require         https://unpkg.com/sweetalert@2.1.2/dist/sweetalert.min.js
 // @require         https://unpkg.com/jquery@3.2.1/dist/jquery.min.js
@@ -42,7 +42,7 @@
 <p id='priate_script_setting' style='margin: 0 0'>
 ❤️ by <a @click='openDonate' style='color:#337ab7'>Priate</a> |
 v <a href="//greasyfork.org/scripts/443771" target="_blank" style='color:#ff6666'>{{version}}</a> |
-<a @click="switchDrag">📌</a> | <a @click="recoverText">♻️</a> | <a @click="todo">🤖️</a> | <a @click="clearData">❌</a>
+<a @click="switchDrag">📌</a> | <a @click="recoverText">♻️</a> | <a v-show="data.length > 0" @click="smartRename">🤖️ |</a> <a @click="clearData">❌</a>
 <br>
 文件夹重命名 : <a @click='todo' :style='"color:" + (false ? "#00947e" : "#CC0F35")'> 关闭 </a> |
 正则 : <a @click='todo' :style='"color:" + (false ? "#00947e" : "#CC0F35")'> 关闭 </a>
@@ -270,7 +270,7 @@ border-radius: 4px;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.0.1",
+			version: "1.0.2",
 			setting: GM_getValue('priate_script_bdwp_data'),
 			data: [],
 			musicList: [],
@@ -451,6 +451,66 @@ border-radius: 4px;
 			},
 			recoverText() {
 				reloadList()
+			},
+			smartRename() {
+				var _this = this
+				var hasChanged = false
+				var hasEmpty = false
+				var lengthStatistics = {}
+				var maxLength = 0
+				this.data.forEach(item => {
+					item.numArr = item.origin.match(/\d+/g) || []
+					// 寻找出现次数最多的匹配项
+					if (lengthStatistics[item.numArr.length] == undefined) lengthStatistics[item.numArr.length] = 1
+					else lengthStatistics[item.numArr.length] += 1
+				})
+				for (var i in lengthStatistics) {
+					maxLength = lengthStatistics[i] > maxLength ? i : maxLength
+				}
+				var seq = -1
+				for (var index = 0; index < maxLength; index++) {
+					const tempList = this.data.map(item => {
+						if (item.numArr.length == maxLength) {
+							return item.numArr[index]
+						}
+					})
+					// 判断是否有重复元素
+					if (Array.from(new Set(tempList)).length == tempList.length) {
+						seq = index
+						break
+					}
+				}
+				if (seq < 0) return swal(`智能重命名失败，找不到唯一的数字序号！`, {
+					icon: "error",
+					buttons: false,
+					timer: 3000,
+				});
+				this.data.forEach(item => {
+					if (item.numArr.length == maxLength) {
+						const suffix = item.origin.split('.').length > 1 ? '.' + item.origin.split('.')[item.origin.split('.').length - 1] : ''
+						console.log(suffix)
+						item.replace = `${item.numArr[seq]}${suffix}`
+					}
+					if (item.replace !== item.origin) {
+						hasChanged = true
+					}
+					if (item.replace == "") {
+						hasEmpty = true
+						item.replace = item.origin
+					}
+					_this.modifyReplace(item)
+				})
+
+				if (!hasChanged) swal(`没有匹配到任何需要修改的文件！`, {
+					icon: "error",
+					buttons: false,
+					timer: 3000,
+				});
+				if (hasEmpty) swal(`替换后某个文件名为空！`, {
+					icon: "error",
+					buttons: false,
+					timer: 3000,
+				});
 			},
 			todo() {
 				swal(`🈲️🈲️🈲️ 此功能暂不可用，请等待版本更新 🔞🔞🔞`, {
