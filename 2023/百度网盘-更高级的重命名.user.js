@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            百度网盘 - 更高级的重命名
-// @version         1.0.4
+// @version         1.0.5
 // @description     你不知道的百度网盘重命名姿势～支持批量替换重命名、手动批量修改后一次提交、智能重命名，拒绝转圈圈！
 // @author          Priate
 // @match           https://pan.baidu.com/*
@@ -12,8 +12,8 @@
 // @require         https://unpkg.com/sweetalert@2.1.2/dist/sweetalert.min.js
 // @require         https://unpkg.com/jquery@3.2.1/dist/jquery.min.js
 // @require         https://greasyfork.org/scripts/435476-priatelib/code/PriateLib.js?version=1202493
-// @supportURL      https://greasyfork.org/zh-CN/scripts/435495/feedback
-// @homepageURL     https://greasyfork.org/zh-CN/scripts/435495
+// @supportURL      https://greasyfork.org/scripts/443771/feedback
+// @homepageURL     https://greasyfork.org/scripts/443771
 // @contributionURL https://afdian.net/@cyberubbish
 // @license         MIT
 // @namespace       https://greasyfork.org/users/219866
@@ -269,7 +269,7 @@ border-radius: 4px;
 	var vm = new Vue({
 		el: '#priate_script_div',
 		data: {
-			version: "1.0.4",
+			version: "1.0.5",
 			setting: GM_getValue('priate_script_bdwp_data'),
 			data: [],
 			musicList: [],
