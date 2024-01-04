@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            喜马拉雅专辑下载器
-// @version         1.2.9
+// @version         1.3.0
 // @description     可能是你见过最丝滑的喜马拉雅下载器啦！登录后支持VIP音频下载，支持专辑批量下载，支持添加编号，链接导出、调用aria2等功能，直接下载M4A，MP3、MP4文件。
 // @author          Priate
 // @match           *://www.ximalaya.com/*
@@ -561,7 +561,7 @@ cursor: pointer;
 						if (e.error != 'aborted') item.isFailued = true
 					},
 					onprogress: function(d) {
-						item.progress = (Math.round(d.done / d.total * 10000) / 100.00) + "%";
+						item.progress = (Math.round(d.loaded / d.total * 10000) / 100.00) + "%";
 					}
 				}
 				this.cancelDownloadObj = GM_download(details)
@@ -595,7 +595,7 @@ cursor: pointer;
 						_this.cancelDownloadObj = _this.sequenceDownload(index + 1, data)
 					},
 					onprogress: function(d) {
-						item.progress = (Math.round(d.done / d.total * 10000) / 100.00) + "%";
+						item.progress = (Math.round(d.loaded / d.total * 10000) / 100.00) + "%";
 					}
 				}
 				this.cancelDownloadObj = GM_download(details)
